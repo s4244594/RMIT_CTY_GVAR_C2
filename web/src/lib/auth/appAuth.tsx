@@ -21,6 +21,8 @@ function LiveAuthBridge({ children }: { children: ReactNode }) {
     hasRealmRole: tide.hasRealmRole,
     getValueFromToken: tide.getValueFromToken,
     secureFetch: tide.secureFetch,
+    doEncrypt: tide.doEncrypt,
+    doDecrypt: tide.doDecrypt,
     signInAs: async () => {
       throw new Error("Demo-account selection is available only in local simulation mode.");
     },

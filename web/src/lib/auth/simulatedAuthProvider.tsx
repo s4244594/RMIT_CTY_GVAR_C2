@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { AppAuthProviderContext, type AppAuth } from "./simulatedAuthContext";
+import { decryptSimulatedPlan, encryptSimulatedPlan } from "./simulatedPlanCrypto";
 import type { RoleKey } from "@/lib/roles";
 
 type SessionUser = {
@@ -95,6 +96,20 @@ export function SimulatedAuthProvider({ children }: { children: ReactNode }) {
     (url: string, init?: RequestInit) => fetch(url, { ...init, credentials: "same-origin" }),
     [],
   );
+  const doEncrypt = useCallback(
+    (items: Parameters<typeof encryptSimulatedPlan>[1]) => {
+      if (!user) throw new Error("Choose a simulated account before encrypting plan data.");
+      return encryptSimulatedPlan(user.username, items);
+    },
+    [user],
+  );
+  const doDecrypt = useCallback(
+    (items: Parameters<typeof decryptSimulatedPlan>[1]) => {
+      if (!user) throw new Error("Choose a simulated account before decrypting plan data.");
+      return decryptSimulatedPlan(user.username, items);
+    },
+    [user],
+  );
   const closeDemoPicker = useCallback(() => setDemoPickerOpen(false), []);
   const value: AppAuth = useMemo(
     () => ({
@@ -107,12 +122,14 @@ export function SimulatedAuthProvider({ children }: { children: ReactNode }) {
       hasRealmRole,
       getValueFromToken,
       secureFetch,
+      doEncrypt,
+      doDecrypt,
       signInAs,
       demoPickerOpen,
       closeDemoPicker,
       demoUsers: DEMO_USERS,
     }),
-    [user, isInitializing, login, logout, hasRealmRole, getValueFromToken, secureFetch, signInAs, demoPickerOpen, closeDemoPicker],
+    [user, isInitializing, login, logout, hasRealmRole, getValueFromToken, secureFetch, doEncrypt, doDecrypt, signInAs, demoPickerOpen, closeDemoPicker],
   );
 
   return (

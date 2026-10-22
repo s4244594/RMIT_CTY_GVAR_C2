@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useTideCloak } from "@tidecloak/nextjs";
 import { RoleGate } from "@/components/RoleGate";
 import { Alert, ClaimList, money, niceDate, PageHero } from "@/components/Claim";
 import type { ClaimView } from "@/lib/claims";
+import { useAppAuth } from "@/lib/auth/appAuth";
 import {
   decodePlanCiphertext,
   decodePlanText,
@@ -68,7 +68,7 @@ const emptyPlan: PlanTexts = {
 
 function ParticipantPlan() {
   const api = useApi();
-  const { authenticated, doDecrypt, doEncrypt } = useTideCloak();
+  const { authenticated, doDecrypt, doEncrypt, isSimulated, username } = useAppAuth();
   const [participantId, setParticipantId] = useState<string | null>(null);
   const [texts, setTexts] = useState<PlanTexts>(emptyPlan);
   const [loading, setLoading] = useState(true);
@@ -104,7 +104,7 @@ function ParticipantPlan() {
     }
     void load();
     return () => { cancelled = true; };
-  }, [api, authenticated, doDecrypt]);
+  }, [api, authenticated, doDecrypt, isSimulated, username]);
 
   async function save(kind: PlanKind) {
     if (!participantId) return;
@@ -130,7 +130,9 @@ function ParticipantPlan() {
   return (
     <section className="panel">
       <h2>My support plan</h2>
-      <p>These records are encrypted in your browser. Only your Tide account can decrypt them.</p>
+      <p>{isSimulated
+        ? "Local test encryption is active. The test key stays in this browser tab and is not managed by Tide. Use fictional data only."
+        : "These records are encrypted in your browser. Only your Tide account can decrypt them."}</p>
       {error && <Alert cls="bad" title="Plan not available">{error}</Alert>}
       {loading ? <p className="empty">Loading plan…</p> : PLAN_KINDS.map((kind) => (
         <div className="field" key={kind}>

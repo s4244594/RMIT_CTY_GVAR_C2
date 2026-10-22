@@ -4,11 +4,9 @@ import { useCallback } from "react";
 import { useAppAuth } from "@/lib/auth/appAuth";
 
 /**
- * Calls our API through the SDK's secureFetch, which attaches the access token AND a fresh
- * DPoP proof for this exact URL and method. The server rejects plain `fetch` with a Bearer
- * token, because a stolen token on its own must not work.
- *
- * Absolute URLs only: secureFetch signs the full URL, and a relative one fails (AP-74).
+ * Calls the API through the selected auth mode. Live mode uses Tide secureFetch with a fresh
+ * DPoP proof; local simulation uses same-origin cookies and a signed development session.
+ * Absolute URLs are required because Tide secureFetch signs the full URL (AP-74).
  */
 export function useApi() {
   const { secureFetch } = useAppAuth();

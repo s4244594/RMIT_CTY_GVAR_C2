@@ -9,9 +9,18 @@ import { ROLES, roleOf } from "@/lib/roles";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const {
-    authenticated, isInitializing, isSimulated, username, login, logout,
-    hasRealmRole, getValueFromToken, demoPickerOpen, closeDemoPicker,
-    demoUsers, signInAs,
+    authenticated,
+    isInitializing,
+    isSimulated,
+    username,
+    login,
+    logout,
+    hasRealmRole,
+    getValueFromToken,
+    demoPickerOpen,
+    closeDemoPicker,
+    demoUsers,
+    signInAs,
   } = useAppAuth();
   const pathname = usePathname();
   const role = authenticated ? roleOf(hasRealmRole) : null;

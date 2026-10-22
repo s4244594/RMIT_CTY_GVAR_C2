@@ -1,7 +1,37 @@
-.env
-.env.local
+# Local environment and credentials. Keep the sanitized setup templates tracked.
+**/.env
+**/.env.*
+!**/.env.example
+!**/.env.*.example
+**/.npmrc
+
+# Local password/credential files, private keys, and certificates.
+**/passwords*.txt
+**/credentials.json
+**/secrets.json
+**/.envrc
+**/*.pem
+**/*.key
+**/*.p12
+**/*.pfx
+**/*.jks
+**/*.keystore
+**/id_rsa
+**/id_ed25519
+**/secrets/
+**/credentials/
+
+# Local databases, backups, and runtime state.
+**/*.sqlite
+**/*.sqlite3
+**/*.db
+**/*.dump
+**/*.backup
+**/*.sql.gz
+**/*.log
+.DS_Store
 node_modules/
 .tide-pack/
 data/
-data_bootstrap.log
+**/data_bootstrap.log
 /passwords.txt

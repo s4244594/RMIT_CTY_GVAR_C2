@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { verifyTideJWT, hasRole, extractToken } from "./tideJWT";
 import { verifyDpop } from "./verifyDpop";
-import { simulatedSessionFromRequest } from "./simulatedSession";
+import { simulatedAuthEnabled, simulatedSessionFromRequest } from "./simulatedSession";
 import type { JWTPayload } from "jose";
 
 type AuthHandler = (req: NextRequest, jwt: JWTPayload) => Promise<Response>;
@@ -9,9 +9,8 @@ type AuthHandler = (req: NextRequest, jwt: JWTPayload) => Promise<Response>;
 export function withAuth(handler: AuthHandler) {
   return async (req: NextRequest) => {
     try {
-      if (process.env.AUTH_MODE === "simulated") {
-        const jwt = simulatedSessionFromRequest(req);
-        return handler(req, jwt);
+      if (simulatedAuthEnabled()) {
+        return handler(req, simulatedSessionFromRequest(req));
       }
 
       const token = extractToken(req.headers.get("authorization"));
@@ -25,7 +24,7 @@ export function withAuth(handler: AuthHandler) {
     } catch (err) {
       return Response.json(
         { error: err instanceof Error ? err.message : "Unauthorized" },
-        { status: 401 }
+        { status: 401 },
       );
     }
   };
