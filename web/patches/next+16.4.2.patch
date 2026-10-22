@@ -1,0 +1,101 @@
+diff --git a/node_modules/next/dist/build/load-entrypoint.js b/node_modules/next/dist/build/load-entrypoint.js
+index ba2fc55..69707a6 100644
+--- a/node_modules/next/dist/build/load-entrypoint.js
++++ b/node_modules/next/dist/build/load-entrypoint.js
+@@ -20,11 +20,40 @@ function _interop_require_default(obj) {
+ const PACKAGE_ROOT = _path.default.normalize(_path.default.join(__dirname, '../..'));
+ const TEMPLATE_SRC_FOLDER = _path.default.normalize(_path.default.join(__dirname, './templates'));
+ const TEMPLATES_ESM_FOLDER = _path.default.normalize(_path.default.join(__dirname, '../../dist/esm/build/templates'));
++function preservePathReplacements(replacements) {
++    const paths = new Map();
++    let index = 0;
++    const safeReplacements = Object.fromEntries(Object.entries(replacements).map(([key, value])=>{
++        if (typeof value !== 'string' || !/VAR_[A-Z_]+/.test(value)) {
++            return [
++                key,
++                value
++            ];
++        }
++        const placeholder = `__NEXT_ROUTE_PATH_${index++}__`;
++        paths.set(placeholder, value);
++        return [
++            key,
++            placeholder
++        ];
++    }));
++    return {
++        replacements: safeReplacements,
++        restore (content) {
++            for (const [placeholder, value] of paths){
++                content = content.replaceAll(JSON.stringify(placeholder), JSON.stringify(value));
++            }
++            return content;
++        }
++    };
++}
+ async function loadEntrypoint(entrypoint, replacements, injections, imports) {
+     const templatePath = _path.default.resolve(_path.default.join(TEMPLATES_ESM_FOLDER, `${entrypoint}.js`));
+     let content = await _promises.default.readFile(templatePath);
+-    return (0, _swc.getBindingsSync)().expandNextJsTemplate(content, // Ensure that we use unix-style path separators for the import paths
+-    _path.default.join(TEMPLATE_SRC_FOLDER, `${entrypoint}.js`).replace(/\\/g, '/'), PACKAGE_ROOT.replace(/\\/g, '/'), replacements, injections ?? {}, imports ?? {});
++    const preserved = preservePathReplacements(replacements);
++    const expanded = (0, _swc.getBindingsSync)().expandNextJsTemplate(content, // Ensure that we use unix-style path separators for the import paths
++    _path.default.join(TEMPLATE_SRC_FOLDER, `${entrypoint}.js`).replace(/\\/g, '/'), PACKAGE_ROOT.replace(/\\/g, '/'), preserved.replacements, injections ?? {}, imports ?? {});
++    return preserved.restore(expanded);
+ }
+ 
+ //# sourceMappingURL=load-entrypoint.js.map
+\ No newline at end of file
+diff --git a/node_modules/next/dist/esm/build/load-entrypoint.js b/node_modules/next/dist/esm/build/load-entrypoint.js
+index f35ee25..a45f776 100644
+--- a/node_modules/next/dist/esm/build/load-entrypoint.js
++++ b/node_modules/next/dist/esm/build/load-entrypoint.js
+@@ -5,6 +5,33 @@ import { getBindingsSync } from './swc';
+ const PACKAGE_ROOT = path.normalize(path.join(__dirname, '../..'));
+ const TEMPLATE_SRC_FOLDER = path.normalize(path.join(__dirname, './templates'));
+ const TEMPLATES_ESM_FOLDER = path.normalize(path.join(__dirname, '../../dist/esm/build/templates'));
++function preservePathReplacements(replacements) {
++    const paths = new Map();
++    let index = 0;
++    const safeReplacements = Object.fromEntries(Object.entries(replacements).map(([key, value])=>{
++        if (typeof value !== 'string' || !/VAR_[A-Z_]+/.test(value)) {
++            return [
++                key,
++                value
++            ];
++        }
++        const placeholder = `__NEXT_ROUTE_PATH_${index++}__`;
++        paths.set(placeholder, value);
++        return [
++            key,
++            placeholder
++        ];
++    }));
++    return {
++        replacements: safeReplacements,
++        restore (content) {
++            for (const [placeholder, value] of paths){
++                content = content.replaceAll(JSON.stringify(placeholder), JSON.stringify(value));
++            }
++            return content;
++        }
++    };
++}
+ /**
+  * Load the entrypoint file from the ESM directory and performs string
+  * replacements of the template variables specified in the `replacements`
+@@ -23,8 +50,10 @@ const TEMPLATES_ESM_FOLDER = path.normalize(path.join(__dirname, '../../dist/esm
+  */ export async function loadEntrypoint(entrypoint, replacements, injections, imports) {
+     const templatePath = path.resolve(path.join(TEMPLATES_ESM_FOLDER, `${entrypoint}.js`));
+     let content = await fs.readFile(templatePath);
+-    return getBindingsSync().expandNextJsTemplate(content, // Ensure that we use unix-style path separators for the import paths
+-    path.join(TEMPLATE_SRC_FOLDER, `${entrypoint}.js`).replace(/\\/g, '/'), PACKAGE_ROOT.replace(/\\/g, '/'), replacements, injections ?? {}, imports ?? {});
+-}
++     const preserved = preservePathReplacements(replacements);
++     const expanded = getBindingsSync().expandNextJsTemplate(content, // Ensure that we use unix-style path separators for the import paths
++     path.join(TEMPLATE_SRC_FOLDER, `${entrypoint}.js`).replace(/\\/g, '/'), PACKAGE_ROOT.replace(/\\/g, '/'), preserved.replacements, injections ?? {}, imports ?? {});
++     return preserved.restore(expanded);
++ }
+ 
+ //# sourceMappingURL=load-entrypoint.js.map
+\ No newline at end of file

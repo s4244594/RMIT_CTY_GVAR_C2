@@ -2,13 +2,17 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useTideCloak } from "@tidecloak/nextjs";
-import tcConfig from "../../data/tidecloak.json";
+import { useAppAuth } from "@/lib/auth/appAuth";
+import tideConfig from "../../data/tidecloak.json";
 import { ProfileOnboarding } from "./ProfileOnboarding";
 import { ROLES, roleOf } from "@/lib/roles";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const { authenticated, isInitializing, login, logout, hasRealmRole, getValueFromToken } = useTideCloak();
+  const {
+    authenticated, isInitializing, isSimulated, username, login, logout,
+    hasRealmRole, getValueFromToken, demoPickerOpen, closeDemoPicker,
+    demoUsers, signInAs,
+  } = useAppAuth();
   const pathname = usePathname();
   const role = authenticated ? roleOf(hasRealmRole) : null;
   const given = authenticated ? (getValueFromToken("given_name") as string | undefined) : undefined;
@@ -39,9 +43,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <>
                   <span className="whoami">
                     Signed in as <strong>{displayName}</strong>
+                    {isSimulated && username ? <> ({username}, simulated)</> : null}
                     {role ? <> &middot; {ROLES[role].label}</> : null}
                   </span>
-                  <button className="util-btn primary" onClick={() => logout()}>Sign out</button>
+                  <button className="util-btn primary" onClick={() => void logout()}>Sign out</button>
                 </>
               ) : (
                 <button className="util-btn primary" onClick={() => login()}>Sign in</button>
@@ -62,6 +67,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </nav>
       </header>
 
+      {isSimulated && (
+        <div className="simulation-banner" role="status">
+          DEVELOPMENT SIMULATION — TideCloak sign-in, identity proofing, and DPoP are not being used.
+          Demo sessions are for local UI and role/access-check testing only.
+        </div>
+      )}
+
       <main>{children}</main>
 
       <footer className="site-footer">
@@ -70,7 +82,32 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </footer>
 
-      <ProfileOnboarding baseUrl={tcConfig["auth-server-url"].replace(/\/+$/, "")} realm={tcConfig.realm} />
+      {demoPickerOpen && (
+        <div className="simulation-overlay" role="dialog" aria-modal="true" aria-labelledby="demo-login-title">
+          <section className="panel simulation-picker">
+            <button className="util-btn simulation-close" type="button" onClick={closeDemoPicker}>Close</button>
+            <h2 id="demo-login-title">Choose a simulated demo role</h2>
+            <p>This bypasses Tide sign-in and must only be used on your local development server.</p>
+            {demoUsers.map((user) => (
+              <button
+                className="util-btn simulation-user"
+                key={user.username}
+                type="button"
+                onClick={() => void signInAs(user.username).catch(() => undefined)}
+              >
+                {user.firstName} {user.lastName} ({user.username}) — {ROLES[user.role].label}
+              </button>
+            ))}
+          </section>
+        </div>
+      )}
+
+      {!isSimulated && (
+        <ProfileOnboarding
+          baseUrl={tideConfig["auth-server-url"].replace(/\/+$/, "")}
+          realm={tideConfig.realm}
+        />
+      )}
     </>
   );
 }

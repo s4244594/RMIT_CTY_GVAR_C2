@@ -1,7 +1,7 @@
 "use client";
 
 import { use, useEffect, useState } from "react";
-import { useTideCloak } from "@tidecloak/nextjs";
+import { useAppAuth } from "@/lib/auth/appAuth";
 import { RoleGate } from "@/components/RoleGate";
 import { Alert, ClaimFacts, PageHero, SignatureChain, StatusBanner } from "@/components/Claim";
 import type { ClaimView } from "@/lib/claims";
@@ -9,7 +9,7 @@ import { useApi } from "@/lib/useApi";
 
 function ClaimStatus({ id }: { id: string }) {
   const api = useApi();
-  const { authenticated } = useTideCloak();
+  const { authenticated } = useAppAuth();
   const [claim, setClaim] = useState<ClaimView | null>(null);
   const [error, setError] = useState<string | null>(null);
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { useTideCloak } from "@tidecloak/nextjs";
+import { useAppAuth } from "@/lib/auth/appAuth";
 
 /**
  * Calls our API through the SDK's secureFetch, which attaches the access token AND a fresh
@@ -11,7 +11,7 @@ import { useTideCloak } from "@tidecloak/nextjs";
  * Absolute URLs only: secureFetch signs the full URL, and a relative one fails (AP-74).
  */
 export function useApi() {
-  const { secureFetch } = useTideCloak();
+  const { secureFetch } = useAppAuth();
   return useCallback(
     async <T,>(path: string, init: RequestInit = {}): Promise<T> => {
       const headers = new Headers(init.headers);

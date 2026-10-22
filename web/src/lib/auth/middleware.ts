@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { verifyTideJWT, hasRole, extractToken } from "./tideJWT";
 import { verifyDpop } from "./verifyDpop";
+import { simulatedSessionFromRequest } from "./simulatedSession";
 import type { JWTPayload } from "jose";
 
 type AuthHandler = (req: NextRequest, jwt: JWTPayload) => Promise<Response>;
@@ -8,6 +9,11 @@ type AuthHandler = (req: NextRequest, jwt: JWTPayload) => Promise<Response>;
 export function withAuth(handler: AuthHandler) {
   return async (req: NextRequest) => {
     try {
+      if (process.env.AUTH_MODE === "simulated") {
+        const jwt = simulatedSessionFromRequest(req);
+        return handler(req, jwt);
+      }
+
       const token = extractToken(req.headers.get("authorization"));
       const jwt = await verifyTideJWT(token);
       // The signature alone is not enough. This realm issues sender-constrained tokens (cnf.jkt),

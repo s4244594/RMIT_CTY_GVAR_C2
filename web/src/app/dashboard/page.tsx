@@ -2,13 +2,13 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useTideCloak } from "@tidecloak/nextjs";
+import { useAppAuth } from "@/lib/auth/appAuth";
 import { RoleGate } from "@/components/RoleGate";
 import { ROLES, roleOf } from "@/lib/roles";
 
 // Sends each person to their own role's dashboard.
 export default function DashboardRedirect() {
-  const { authenticated, hasRealmRole } = useTideCloak();
+  const { authenticated, hasRealmRole } = useAppAuth();
   const router = useRouter();
   const role = authenticated ? roleOf(hasRealmRole) : null;
 

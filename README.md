@@ -63,7 +63,7 @@ TideCloak provides the identity, authority and privacy layer. Our app provides t
 - **Signed steps (Tide attestations).** Each claim step is a statement the Tide network signs on the user's behalf. Before signing, the network checks that the logged-in person is the one the statement names as its author:
   - The participant's confirmation is a **"self"** statement. The network only signs it if the participant is signing about themselves, so no one can confirm on their behalf.
   - Worker, provider and approver steps are **"role"** statements. The network only signs them for someone who holds that role.
-- **Encrypted plan data with per-record access.** Plan details and support notes are encrypted per participant. Using Tide's built-in record-access contract, a participant's care team can be granted read access to that participant's records, and nobody else can decrypt them, including our server and its administrators. Sensitive fields (e.g. diagnosis) live in separate records from routine ones (e.g. service type), so each role is granted only what it needs.
+- **Participant-owned encrypted plan data (demo scope).** Plan text is encrypted in the participant's browser with a Tide tag unique to that participant. The database stores the ciphertext; only that participant is granted the matching decrypt role. Care-team sharing is not implemented yet, and record metadata (participant, category and update time) remains visible to the app server.
 - **Governed permission changes.** With Tide's identity governance switched on, granting someone the approver role, or adding them to a care team, needs sign-off from a quorum of admins. Quorum is 70% of admins, rounded down, so we run three admins to make any change need two of them. A single rogue admin cannot make themselves an approver.
 
 **What our app does**
@@ -95,32 +95,55 @@ Two more refusals complete the story:
 - **Signing on someone else's behalf.** The provider tries to confirm on the participant's behalf, and the Tide network refuses to sign it.
 - **Self-promotion.** A single admin tries to make themselves an approver, and the change sits waiting for a second admin's approval.
 
-**Prototype status.** Login, roles, governed admin changes and encrypted plan data run on TideCloak's built-in features. The signed claim steps use a Tide signing contract that is reviewed and deployed by the Tide team (currently on test networks), so they depend on that deployment being in place for the demo.
+**Prototype status.** Login, roles and governed admin changes run through TideCloak. The participant dashboard can save plan text encrypted in the browser; the demo realm grants the unique plan tag only to Mia. A fresh realm bootstrap provisions these roles. An existing realm needs the roles granted to Mia through its governed admin flow. Care-team plan sharing is not implemented. The signed claim steps currently use an interim server HMAC until Tide deploys the reviewed attestation contract.
 
 **Next step after the prototype.** A version where payment release itself also requires a second agency approver to co-sign at the network level, rather than through our app's rule check. Tide supports this kind of multi-approver signing, but it is the least proven part of the platform today, so we kept it out of the core demo.
 
 ## Setup
 
-Everything runs locally in Docker Desktop: TideCloak (sign-in and roles) and PostgreSQL (the app's data).
+The app is built as though TideCloak protects it. Sign-in, roles and access checks follow TideCloak's model but run inside the app, so there is no TideCloak server to set up. You only need a database and the web app.
 
-### TideCloak
+**You need:** Docker Desktop (running) and Node.js 20.9 or later.
 
-`tidecloak/bootstrap.sh` starts the `tidecloak` container and sets up the licensed `claimchain` realm. It needs the licence email and terms agreement in `.env` (see [`.env.example`](.env.example)). After a restart, just start the existing container: `docker start tidecloak`.
+### 1. Start the database
 
-### Database (PostgreSQL in Docker)
 
 ```bash
-docker run -d --name claimchain-db -e POSTGRES_USER=claimchain -e POSTGRES_PASSWORD=<password> \
-  -e POSTGRES_DB=claimchain -p 5432:5432 -v claimchain-pgdata:/var/lib/postgresql/data postgres:16
+docker run -d --name claimchain-db -e POSTGRES_USER=claimchain -e POSTGRES_PASSWORD=<db-password> \
+  -e POSTGRES_DB=claimchain -p 5432:5432 postgres:16
 docker exec -i claimchain-db psql -U claimchain -d claimchain < db/schema.sql
-docker exec -i claimchain-db psql -U claimchain -d claimchain < db/seed.sql
+docker exec -i claimchain-db psql -U claimchain -d claimchain < db/seed.sql```
+
+On Windows PowerShell, load the two files with `Get-Content db/schema.sql | docker exec -i claimchain-db psql -U claimchain -d claimchain` (and the same for `seed.sql`).
+
+### 2. Configure
+
+```bash
+cd web
+cp .env.example .env
 ```
 
-Put `DATABASE_URL=postgresql://claimchain:<password>@localhost:5432/claimchain` in `web/.env`. After a restart: `docker start claimchain-db`.
+In `web/.env`, set:
 
-The tamper demo edits `claims.hours` directly, either from the admin dashboard or with `docker exec -it claimchain-db psql -U claimchain -d claimchain`.
+- `DATABASE_URL=postgresql://claimchain:<db-password>@localhost:5432/claimchain`
+- `STEP_SIGNING_SECRET` and `TIDECLOAK_SIM_SECRET`: two different random strings. Make each with `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`
 
-### Web app
+### 3. Run
 
-See [`web/README.md`](web/README.md). The earlier clickable prototype is kept in [`archived/prototype/`](archived/prototype/).
- 
+```bash
+npm install
+npm run dev
+```
+
+Open <http://localhost:3000>.
+
+### 4. Try it
+
+Sign in with the accounts in [`DEMO-LOGINS.md`](DEMO-LOGINS.md). Use a separate private window for each person.
+
+1. **sam.patel** (worker): log a service and sign it.
+2. **jordan.lee** (provider): click **Confirm for the participant**. It is refused.
+3. **mia.nguyen** (participant): click **Yes, this happened**.
+4. **jordan.lee**: refresh and click **Submit and sign**.
+5. **alex.romero** (approver): **Approve and sign**, then **Release payment**.
+6. **admin**: on a claim that isn't paid yet, change the hours and save. The claim turns red and payment is blocked.

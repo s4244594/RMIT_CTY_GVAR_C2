@@ -22,10 +22,4 @@ insert into support_assignments (participant_id, worker_id, provider_org_id) val
    '00000000-0000-0000-0000-000000000001',
    '00000000-0000-0000-0000-0000000000b1');
 
--- Placeholders until Tide encryption is wired in. Real rows hold Tide ciphertext only.
-insert into plan_records (participant_id, kind, ciphertext, tide_tag) values
-  ('00000000-0000-0000-0000-000000000002', 'goals',             'NOT-YET-ENCRYPTED', 'plan.mia.goals'),
-  ('00000000-0000-0000-0000-000000000002', 'support_needs',     'NOT-YET-ENCRYPTED', 'plan.mia.needs'),
-  ('00000000-0000-0000-0000-000000000002', 'health',            'NOT-YET-ENCRYPTED', 'plan.mia.health'),
-  ('00000000-0000-0000-0000-000000000002', 'funding',           'NOT-YET-ENCRYPTED', 'plan.mia.funding'),
-  ('00000000-0000-0000-0000-000000000002', 'service_agreement', 'NOT-YET-ENCRYPTED', 'plan.mia.agreement');
+-- Plan records are added by the participant through the app, encrypted in the browser.

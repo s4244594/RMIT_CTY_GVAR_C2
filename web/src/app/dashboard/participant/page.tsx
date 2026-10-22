@@ -1,9 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useTideCloak } from "@tidecloak/nextjs";
 import { RoleGate } from "@/components/RoleGate";
 import { Alert, ClaimList, money, niceDate, PageHero } from "@/components/Claim";
 import type { ClaimView } from "@/lib/claims";
+import {
+  decodePlanCiphertext,
+  decodePlanText,
+  encodePlanCiphertext,
+  PLAN_KINDS,
+  PLAN_KIND_LABELS,
+  planTagForParticipant,
+  type PlanKind,
+} from "@/lib/planRecords";
 import { useApi } from "@/lib/useApi";
 import { useClaims } from "@/lib/useClaims";
 
@@ -45,6 +55,103 @@ function ConfirmCard({ claim, onDone }: { claim: ClaimView; onDone: () => void }
   );
 }
 
+type PlanRecord = { kind: PlanKind; ciphertext: string };
+type PlanTexts = Record<PlanKind, string>;
+
+const emptyPlan: PlanTexts = {
+  goals: "",
+  support_needs: "",
+  health: "",
+  funding: "",
+  service_agreement: "",
+};
+
+function ParticipantPlan() {
+  const api = useApi();
+  const { authenticated, doDecrypt, doEncrypt } = useTideCloak();
+  const [participantId, setParticipantId] = useState<string | null>(null);
+  const [texts, setTexts] = useState<PlanTexts>(emptyPlan);
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState<PlanKind | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState<PlanKind | null>(null);
+
+  useEffect(() => {
+    if (!authenticated) return;
+    let cancelled = false;
+    async function load() {
+      try {
+        const data = await api<{ participantId: string; records: PlanRecord[] }>("/api/me/plan");
+        const tag = planTagForParticipant(data.participantId);
+        const values = await doDecrypt(data.records.map((record) => ({
+          encrypted: decodePlanCiphertext(record.ciphertext),
+          tags: [tag],
+        })));
+        if (cancelled) return;
+        const loaded = { ...emptyPlan };
+        data.records.forEach((record, index) => {
+          const value = values[index];
+          if (value !== undefined) loaded[record.kind] = decodePlanText(value);
+        });
+        setParticipantId(data.participantId);
+        setTexts(loaded);
+        setError(null);
+      } catch (err) {
+        if (!cancelled) setError(err instanceof Error ? err.message : String(err));
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    void load();
+    return () => { cancelled = true; };
+  }, [api, authenticated, doDecrypt]);
+
+  async function save(kind: PlanKind) {
+    if (!participantId) return;
+    setBusy(kind);
+    setSaved(null);
+    setError(null);
+    try {
+      const tag = planTagForParticipant(participantId);
+      const [encrypted] = await doEncrypt([{ data: texts[kind], tags: [tag] }]);
+      if (encrypted === undefined) throw new Error("Tide did not return encrypted plan data.");
+      await api("/api/me/plan", {
+        method: "PUT",
+        body: JSON.stringify({ kind, ciphertext: encodePlanCiphertext(encrypted) }),
+      });
+      setSaved(kind);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  return (
+    <section className="panel">
+      <h2>My support plan</h2>
+      <p>These records are encrypted in your browser. Only your Tide account can decrypt them.</p>
+      {error && <Alert cls="bad" title="Plan not available">{error}</Alert>}
+      {loading ? <p className="empty">Loading plan…</p> : PLAN_KINDS.map((kind) => (
+        <div className="field" key={kind}>
+          <label htmlFor={`plan-${kind}`}>{PLAN_KIND_LABELS[kind]}</label>
+          <textarea
+            id={`plan-${kind}`}
+            rows={3}
+            value={texts[kind]}
+            onChange={(event) => setTexts({ ...texts, [kind]: event.target.value })}
+            disabled={busy !== null}
+          />
+          <button className="btn" type="button" disabled={busy !== null} onClick={() => void save(kind)}>
+            {busy === kind ? "Encrypting and saving…" : "Save encrypted"}
+          </button>
+          {saved === kind && <p role="status">Saved encrypted.</p>}
+        </div>
+      ))}
+    </section>
+  );
+}
+
 function ParticipantDashboard() {
   const { claims, error, reload } = useClaims();
   const waiting = (claims ?? []).filter((c) => c.nextStep === "confirmed" && !c.tampered);
@@ -56,6 +163,8 @@ function ParticipantDashboard() {
         <div className="phone"><p className="big-q">Nothing to confirm</p><p>When your support worker logs a service, it will appear here for you to check.</p></div>
       )}
       {waiting.map((c) => <ConfirmCard key={c.id} claim={c} onDone={reload} />)}
+
+      <ParticipantPlan />
 
       <div className="panel" style={{ maxWidth: 720, marginLeft: "auto", marginRight: "auto" }}>
         <h3>Why only you can confirm</h3>

@@ -14,6 +14,14 @@
       {
         "name": "_tide_enabled",
         "description": "Represents a tide user thats allowed perform actions on tide"
+      {
+        "name": "_tide_participant_00000000000000000000000000000002.selfencrypt",
+        "description": "Encrypt the demo participant's own plan records."
+      },
+      {
+        "name": "_tide_participant_00000000000000000000000000000002.selfdecrypt",
+        "description": "Decrypt the demo participant's own plan records."
+      },
       },
       {
         "name": "_tide_encryptor",

@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "postinstall": "patch -p1 -i patches/next+16.4.2.patch",
     "dev": "next dev --webpack",
     "build": "next build --webpack",
     "start": "next start",
@@ -11,7 +12,7 @@
   "dependencies": {
     "@tidecloak/nextjs": "0.14.40",
     "jose": "^6.0.0",
-    "next": "^16.0.0",
+    "next": "16.4.2",
     "pg": "^8.13.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"

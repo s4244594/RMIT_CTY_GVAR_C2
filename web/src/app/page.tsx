@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useTideCloak } from "@tidecloak/nextjs";
+import { useAppAuth } from "@/lib/auth/appAuth";
 import { ROLES, roleOf } from "@/lib/roles";
 
 export default function HomePage() {
-  const { authenticated, isInitializing, login, hasRealmRole } = useTideCloak();
+  const { authenticated, isInitializing, isSimulated, login, hasRealmRole } = useAppAuth();
   const role = authenticated ? roleOf(hasRealmRole) : null;
 
   return (
@@ -41,7 +41,9 @@ export default function HomePage() {
           <div className="panel">
             <h3>Why you can trust it</h3>
             <p style={{ margin: 0 }}>
-              Everyone signs in through TideCloak, where passwords are checked by the Tide network and never stored.
+              {isSimulated
+                ? "This local simulation lets you test the app's role dashboards and API access checks. It does not authenticate through TideCloak or provide Tide identity proofing."
+                : "Everyone signs in through TideCloak, where passwords are checked by the Tide network and never stored."}{" "}
               Each step is signed as the person who made it. If anyone changes a signed claim afterwards, even a
               system administrator, the signatures stop matching and payment is blocked. Names are only shown to
               people who work together.

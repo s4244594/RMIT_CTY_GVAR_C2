@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useTideCloak } from "@tidecloak/nextjs";
+import { useAppAuth } from "@/lib/auth/appAuth";
 import { ROLES, roleOf, type RoleKey } from "@/lib/roles";
 
 /**
@@ -9,7 +9,7 @@ import { ROLES, roleOf, type RoleKey } from "@/lib/roles";
  * show, not what is allowed. Every API route checks the role again from the verified token.
  */
 export function RoleGate({ role, children }: { role: RoleKey | "any"; children: React.ReactNode }) {
-  const { isInitializing, authenticated, login, hasRealmRole } = useTideCloak();
+  const { isInitializing, authenticated, login, hasRealmRole } = useAppAuth();
 
   if (isInitializing) return <div className="container loading">Loading…</div>;
 

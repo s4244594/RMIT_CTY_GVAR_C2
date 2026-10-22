@@ -51,6 +51,9 @@ if [ -f ".env" ]; then
   set -a; . "./.env"; set +a
 fi
 
+while [[ "$TIDECLOAK_URL" == */ ]]; do TIDECLOAK_URL="${TIDECLOAK_URL%/}"; done
+while [[ "$CLIENT_APP_URL" == */ ]]; do CLIENT_APP_URL="${CLIENT_APP_URL%/}"; done
+
 KC_BOOTSTRAP_ADMIN_USERNAME="${KC_BOOTSTRAP_ADMIN_USERNAME:-${KC_ADMIN_USER:-admin}}"
 # Accept KC_ADMIN_PASSWORD as an alias, but require ONE of them to be set. No default:
 # a default password is a hardcoded credential with extra steps.
@@ -256,10 +259,11 @@ case "$TIDECLOAK_IMAGE" in
 esac
 
 MSYS_NO_PATHCONV=1 docker run -d --name tidecloak \
-  -v "$(pwd -W)/data:/opt/keycloak/data/h2" \
+  -v "$(pwd -W 2>/dev/null || pwd -P)/data:/opt/keycloak/data/h2" \
   -p 8080:8080 \
   -e KC_BOOTSTRAP_ADMIN_USERNAME="$KC_BOOTSTRAP_ADMIN_USERNAME" \
   -e KC_BOOTSTRAP_ADMIN_PASSWORD="$KC_BOOTSTRAP_ADMIN_PASSWORD" \
+  -e KC_FEATURE_DPOP=enabled \
   "$TIDECLOAK_IMAGE"
 
 if [ $? -ne 0 ]; then
@@ -286,9 +290,13 @@ echo "==> Creating realm '$REALM_NAME'..."
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 TMP_REALM="./data/realm.tmp.json"
 cp "$SCRIPT_DIR/realm.json.template" "$TMP_REALM"
-sed -i "s|REALM_NAME|$REALM_NAME|g" "$TMP_REALM"
-sed -i "s|CLIENT_NAME|$CLIENT_NAME|g" "$TMP_REALM"
-sed -i "s|CLIENT_APP_URL|$CLIENT_APP_URL|g" "$TMP_REALM"
+replace_template_value() {
+  sed "s|$1|$2|g" "$TMP_REALM" > "$TMP_REALM.tmp"
+  mv "$TMP_REALM.tmp" "$TMP_REALM"
+}
+replace_template_value "REALM_NAME" "$REALM_NAME"
+replace_template_value "CLIENT_NAME" "$CLIENT_NAME"
+replace_template_value "CLIENT_APP_URL" "$CLIENT_APP_URL"
 
 TOKEN="$(get_token)"
 curl -s -X POST "$TIDECLOAK_URL/admin/realms" \
@@ -296,6 +304,19 @@ curl -s -X POST "$TIDECLOAK_URL/admin/realms" \
   -H "Content-Type: application/json" \
   --data-binary @"$TMP_REALM"
 rm -f "$TMP_REALM"
+
+# The browser SDK uses strict DPoP and requires the realm to advertise ES256.
+echo "==> Verifying DPoP support in OIDC discovery..."
+DPoP_ALGS="$(curl -sf "$TIDECLOAK_URL/realms/$REALM_NAME/.well-known/openid-configuration" \
+  | jq -r '.dpop_signing_alg_values_supported // [] | join(",")')" || DPoP_ALGS=""
+case ",$DPoP_ALGS," in
+  *,ES256,*) echo "    DPoP is advertised (ES256)." ;;
+  *)
+    echo "ERROR: OIDC discovery does not advertise ES256 for DPoP (found: ${DPoP_ALGS:-none})." >&2
+    echo "       This TideCloak image/version must support DPoP and publish dpop_signing_alg_values_supported." >&2
+    exit 1
+    ;;
+esac
 
 # --- Step 3b: Never show Keycloak's "Update Account Information" page --------------------------
 # Tide asserts ONLY a username (the vuid) -- no email, no name. Keycloak's first-broker-login flow
@@ -345,6 +366,28 @@ if [ "$REVIEW_VAL" != "off" ]; then
   echo "       Diagnose with templates/skip-idp-review/diagnose-post-signup-page.sh" >&2
   exit 1
 fi
+
+ensure_email_optional() {
+  local profile required
+  TOKEN="$(get_token)"
+  profile="$(curl -sf "$TIDECLOAK_URL/admin/realms/$REALM_NAME/users/profile" \
+    -H "Authorization: Bearer $TOKEN")"
+  required="$(printf '%s' "$profile" | jq -r '[.attributes[]? | select(.name=="email") | has("required")] | first // true')"
+  if [ "$required" = "true" ]; then
+    curl -sf -X PUT "$TIDECLOAK_URL/admin/realms/$REALM_NAME/users/profile" \
+      -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+      -d "$(printf '%s' "$profile" | jq '(.attributes[] | select(.name=="email")) |= del(.required)')" \
+      > /dev/null
+  fi
+  TOKEN="$(get_token)"
+  profile="$(curl -sf "$TIDECLOAK_URL/admin/realms/$REALM_NAME/users/profile" \
+    -H "Authorization: Bearer $TOKEN")"
+  required="$(printf '%s' "$profile" | jq -r '[.attributes[]? | select(.name=="email") | has("required")] | first // true')"
+  if [ "$required" != "false" ]; then
+    echo "ERROR: email is still required in the realm user profile." >&2
+    exit 1
+  fi
+}
 
 # --- Step 3c: Email optional ---
 # The stock user profile requires email, which blocks creating demo users without one.
@@ -420,6 +463,8 @@ else
     *'"warnings"'*|*commitFailures*) echo "WARNING: toggle-iga reported warnings. Read them before continuing: $IGA_OUT" >&2 ;;
   esac
 fi
+
+ensure_email_optional
 
 fi  # end of RESUME skip
 
@@ -561,6 +606,9 @@ for entry in $DEMO_USERS; do
   grant_demo_role "$u" "$r"
 done
 grant_demo_role "admin" "sysadmin"
+# Only Mia receives the Tide tag roles for her participant-specific plan records.
+grant_demo_role "mia.nguyen" "_tide_participant_00000000000000000000000000000002.selfencrypt"
+grant_demo_role "mia.nguyen" "_tide_participant_00000000000000000000000000000002.selfdecrypt"
 sleep 2
 approve_and_commit roles
 echo "  Demo users created: sam.patel mia.nguyen jordan.lee alex.romero (admin holds sysadmin)"

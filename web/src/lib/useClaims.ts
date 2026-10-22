@@ -1,14 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useTideCloak } from "@tidecloak/nextjs";
+import { useAppAuth } from "@/lib/auth/appAuth";
 import type { ClaimView } from "./claims";
 import { useApi } from "./useApi";
 
 /** Loads the claims the server lets this person see. */
 export function useClaims() {
   const api = useApi();
-  const { authenticated } = useTideCloak();
+  const { authenticated } = useAppAuth();
   const [claims, setClaims] = useState<ClaimView[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
