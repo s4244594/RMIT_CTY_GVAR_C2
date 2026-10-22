@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Claim status · Claim Chain</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+</head>
+<body data-page="claim" data-role="any">
+  <header id="site-header"></header>
+
+  <main>
+    <section class="hero hero-small">
+      <div class="container">
+        <h1>Claim status</h1>
+        <p>Anyone involved can check a claim. Every signature is re-checked against the claim data each time.</p>
+      </div>
+    </section>
+
+    <div class="toolbar"><div class="container">
+      <span class="crumbs"><a href="index.html">Home</a> &rsaquo; Claim status</span>
+      <a href="#" onclick="window.print();return false">Print this page</a>
+    </div></div>
+
+    <div class="container">
+      <div data-status></div>
+      <div class="btn-row" id="next-action"></div>
+
+      <div class="two-col">
+        <div class="panel">
+          <h2>Signature chain</h2>
+          <ol class="chain" data-chain></ol>
+        </div>
+        <aside class="panel">
+          <h3>Claim details</h3>
+          <dl class="kv" data-summary></dl>
+        </aside>
+      </div>
+
+      <div class="panel">
+        <h3>Latest signed statement: <span id="statement-label"></span></h3>
+        <p style="color:var(--muted)">This is rebuilt from the claim data every time. It includes the signature of the step before it, so steps can't be reordered or swapped.</p>
+        <pre class="sig" id="statement" style="display:block;padding:14px;white-space:pre-wrap"></pre>
+      </div>
+    </div>
+  </main>
+
+  <footer id="site-footer" class="site-footer"></footer>
+</body>
+</html>

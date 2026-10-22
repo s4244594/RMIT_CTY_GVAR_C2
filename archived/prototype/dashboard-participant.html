@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Participant dashboard · Claim Chain</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+</head>
+<body data-page="participant" data-role="participant">
+  <header id="site-header"></header>
+
+  <main>
+    <section class="hero hero-small">
+      <div class="container">
+        <h1>Participant dashboard</h1>
+        <p>Welcome, <span data-name></span>. You have the final say on whether a support happened (step 2 of 4).</p>
+      </div>
+    </section>
+
+    <div class="toolbar"><div class="container">
+      <span class="crumbs"><a href="index.html">Home</a> &rsaquo; My dashboard</span>
+      <a href="plan.html">My plan details</a>
+    </div></div>
+
+    <div class="container">
+      <div id="role-gate" class="hidden"></div>
+      <div id="role-content" class="hidden">
+        <div class="phone">
+          <p style="margin:0;color:var(--muted)">Hi Mia</p>
+          <div id="confirm-box"></div>
+          <div id="result"></div>
+        </div>
+
+        <div class="panel" style="max-width:720px;margin-left:auto;margin-right:auto">
+          <h3>Why only you can confirm</h3>
+          <p>Your confirmation is a <strong>self statement</strong>: something you say about yourself. The Tide network will only sign it if the person signing is you. Your provider, the agency and system admins can't confirm on your behalf.</p>
+          <p style="margin:0">If you have a plan nominee, they sign in with their own account and confirm as your nominee.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer id="site-footer" class="site-footer"></footer>
+</body>
+</html>

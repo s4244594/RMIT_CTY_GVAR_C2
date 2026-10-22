@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sign in · TideCloak</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+</head>
+<body data-page="login" class="tide-page">
+  <!-- Mock of the TideCloak sign-in page. In the real app the browser is redirected to
+       TideCloak for this step, and the app never sees the password. -->
+  <div class="tide-redirect">
+    <span>&#8635; You've been redirected from <strong>NDIS Claim Chain</strong> to TideCloak to sign in.</span>
+    <a href="index.html">Cancel</a>
+  </div>
+
+  <main class="tide-main">
+    <form class="tide-card" id="tide-form" autocomplete="off">
+      <div class="tide-brand">TideCloak</div>
+      <h1>Sign in to NDIS Claim Chain</h1>
+      <div class="field">
+        <label for="username">Username</label>
+        <input id="username" name="username" required>
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" required>
+      </div>
+      <button class="btn btn-big" type="submit">Sign in</button>
+      <div id="login-result"></div>
+      <p class="tide-foot">Your password is checked by independent nodes on the Tide network. It is never stored, and no single server can see it.</p>
+    </form>
+
+    <div class="tide-card tide-demo">
+      <h2>Demo accounts</h2>
+      <p>Password for all: <span class="sig">demo123</span>. Click a username to fill it in.</p>
+      <table class="data-table">
+        <thead><tr><th>Username</th><th>Role</th></tr></thead>
+        <tbody id="demo-accounts"></tbody>
+      </table>
+    </div>
+  </main>
+</body>
+</html>

@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Provider dashboard · Claim Chain</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+</head>
+<body data-page="provider" data-role="provider">
+  <header id="site-header"></header>
+
+  <main>
+    <section class="hero hero-small">
+      <div class="container">
+        <h1>Provider dashboard</h1>
+        <p>Welcome, <span data-name></span>. Check confirmed services against the agreement and submit them (step 3 of 4).</p>
+      </div>
+    </section>
+
+    <div class="toolbar"><div class="container">
+      <span class="crumbs"><a href="index.html">Home</a> &rsaquo; My dashboard</span>
+      <a href="claim.html">Claim status</a>
+    </div></div>
+
+    <div class="container">
+      <div id="role-gate" class="hidden"></div>
+      <div id="role-content" class="hidden">
+        <div class="two-col">
+          <div class="panel">
+            <h2>Claim ready for review</h2>
+            <dl class="kv" data-summary></dl>
+            <h3 style="margin-top:24px">Checks</h3>
+            <ul class="checklist" id="provider-checks"></ul>
+            <button class="btn" id="submit-claim">Submit and sign</button>
+            <div id="result"></div>
+          </div>
+
+          <aside class="panel">
+            <h3>Signatures so far</h3>
+            <ol class="chain" data-chain></ol>
+          </aside>
+        </div>
+
+        <div class="panel">
+          <h3>Try it: confirm on the participant's behalf</h3>
+          <p>Mia hasn't answered yet and you want to get the claim moving. What happens if you try to sign her confirmation yourself?</p>
+          <button class="btn btn-danger" id="impersonate">Confirm for Mia</button>
+          <div id="impersonate-result"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer id="site-footer" class="site-footer"></footer>
+</body>
+</html>

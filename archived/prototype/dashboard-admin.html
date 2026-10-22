@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin dashboard · Claim Chain</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+</head>
+<body data-page="admin" data-role="admin">
+  <header id="site-header"></header>
+
+  <main>
+    <section class="hero hero-small">
+      <div class="container">
+        <h1>Admin dashboard</h1>
+        <p>Welcome, <span data-name></span>. Full database access, but no power to fake a signature or grant roles alone.</p>
+      </div>
+    </section>
+
+    <div class="toolbar"><div class="container">
+      <span class="crumbs"><a href="index.html">Home</a> &rsaquo; My dashboard</span>
+      <a href="claim.html">Claim status</a>
+    </div></div>
+
+    <div class="container">
+      <div id="role-gate" class="hidden"></div>
+      <div id="role-content" class="hidden">
+        <div class="two-col">
+          <div class="panel">
+            <span class="badge bad">Tamper test</span>
+            <h2 style="margin-top:12px">Edit the database directly</h2>
+            <p>You can change any row. Try changing the hours on claim CLM-2026-0417 after it's been signed, for example from 3 to 5.</p>
+            <div class="field" style="max-width:200px">
+              <label for="db-hours">claims.hours</label>
+              <input type="number" id="db-hours" min="0.25" step="0.25">
+            </div>
+            <button class="btn btn-danger" id="db-save">Save to database</button>
+            <div id="db-result"></div>
+          </div>
+
+          <aside class="panel">
+            <h3>What happens</h3>
+            <p>The database accepts the edit. But each signed step is rebuilt from the data and checked against its signature. The new hours don't match what the worker and Mia signed, so the claim turns red and payment is blocked.</p>
+            <p style="margin:0">Change the hours back and the signatures match again. The signatures always point to the truth.</p>
+          </aside>
+        </div>
+
+        <div class="panel">
+          <span class="badge">Governance</span>
+          <h2 style="margin-top:12px">Grant someone the approver role</h2>
+          <p>Try making your friend Taylor Kim an agency approver. Role changes need approval from 2 of the 3 admins (Chris, Priya, Tom). The Tide network enforces this, not a setting in our app.</p>
+          <div class="btn-row">
+            <button class="btn" id="gov-request">Request: make Taylor Kim an approver</button>
+            <button class="btn btn-outline" id="gov-self">Approve it myself</button>
+            <button class="btn btn-outline" id="gov-second">Approve as Priya Shah (2nd admin)</button>
+            <button class="btn btn-outline" id="gov-reset">Reset</button>
+          </div>
+          <div id="gov-result"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer id="site-footer" class="site-footer"></footer>
+</body>
+</html>

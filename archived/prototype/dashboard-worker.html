@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Support worker dashboard · Claim Chain</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+</head>
+<body data-page="worker" data-role="worker">
+  <header id="site-header"></header>
+
+  <main>
+    <section class="hero hero-small">
+      <div class="container">
+        <h1>Support worker dashboard</h1>
+        <p>Welcome, <span data-name></span>. Log the supports you deliver and sign them (step 1 of 4).</p>
+      </div>
+    </section>
+
+    <div class="toolbar"><div class="container">
+      <span class="crumbs"><a href="index.html">Home</a> &rsaquo; My dashboard</span>
+      <a href="claim.html">Claim status</a>
+    </div></div>
+
+    <div class="container">
+      <div id="role-gate" class="hidden"></div>
+      <div id="role-content" class="hidden">
+        <div class="two-col">
+          <form class="panel" id="service-form">
+            <h2>Service details</h2>
+            <div class="field">
+              <label>Participant</label>
+              <input value="Mia Nguyen (NDIS no. 43 012 345 6)" readonly>
+            </div>
+            <div class="field">
+              <label for="service">Support</label>
+              <select id="service" name="service">
+                <option>Community access (Core supports)</option>
+                <option>Assistance with daily life (Core supports)</option>
+                <option>Transport (Core supports)</option>
+              </select>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label for="date">Date</label>
+                <input type="date" id="date" name="date">
+              </div>
+              <div class="field">
+                <label for="hours">Hours</label>
+                <input type="number" id="hours" name="hours" min="0.25" max="12" step="0.25">
+              </div>
+            </div>
+            <div class="field">
+              <label for="notes">Notes</label>
+              <textarea id="notes" name="notes" rows="3"></textarea>
+              <div class="hint">Notes are encrypted. Only Mia and her care team can read them.</div>
+            </div>
+            <button class="btn" type="submit">Sign with Tide</button>
+            <div id="result"></div>
+          </form>
+
+          <aside class="panel">
+            <h3>What you're signing</h3>
+            <p>"I, Sam Patel, delivered this support to Mia Nguyen on this date, for these hours."</p>
+            <p>The Tide network signs it for you only after checking two things:</p>
+            <ul class="checklist">
+              <li><span class="mark ok">&#10003;</span><span>You hold the <strong>support worker</strong> role.</span></li>
+              <li><span class="mark ok">&#10003;</span><span>You're the person named on this step.</span></li>
+            </ul>
+            <p style="color:var(--muted)">After you sign, nobody can change these details without the signature breaking.</p>
+          </aside>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer id="site-footer" class="site-footer"></footer>
+</body>
+</html>

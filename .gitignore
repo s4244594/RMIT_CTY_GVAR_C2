@@ -1,0 +1,6 @@
+.env
+.env.local
+node_modules/
+.tide-pack/
+data/
+data_bootstrap.log

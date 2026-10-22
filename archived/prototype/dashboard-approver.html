@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Approver dashboard · Claim Chain</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+</head>
+<body data-page="approver" data-role="approver">
+  <header id="site-header"></header>
+
+  <main>
+    <section class="hero hero-small">
+      <div class="container">
+        <h1>Agency approver dashboard</h1>
+        <p>Welcome, <span data-name></span>. Check the funding rules, approve, and release payment (step 4 of 4).</p>
+      </div>
+    </section>
+
+    <div class="toolbar"><div class="container">
+      <span class="crumbs"><a href="index.html">Home</a> &rsaquo; My dashboard</span>
+      <a href="claim.html">Claim status</a>
+    </div></div>
+
+    <div class="container">
+      <div id="role-gate" class="hidden"></div>
+      <div id="role-content" class="hidden">
+        <div data-status></div>
+        <div class="two-col">
+          <div class="panel">
+            <h2>Funding rule checks</h2>
+            <ul class="checklist" id="rule-checks"></ul>
+            <div class="btn-row">
+              <button class="btn" id="approve">Approve and sign</button>
+              <button class="btn btn-green" id="release">Release payment</button>
+            </div>
+            <div id="result"></div>
+          </div>
+
+          <aside class="panel">
+            <h3>Claim</h3>
+            <dl class="kv" data-summary></dl>
+          </aside>
+        </div>
+
+        <div class="panel">
+          <h3>Signature chain</h3>
+          <p style="color:var(--muted)">Every time this page loads, each statement is rebuilt from the claim data and checked against its signature.</p>
+          <ol class="chain" data-chain></ol>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer id="site-footer" class="site-footer"></footer>
+</body>
+</html>
